@@ -29,7 +29,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"    %% "akka-http-core"         % akkaHttpVersion,
     "com.typesafe.akka"    %% "akka-http"              % akkaHttpVersion,
     "io.spray"             %% "spray-json"             % "1.3.3",
-    "com.roundeights"      % "hasher_2.11"                 % "1.2.0",
+    "com.roundeights"      %  "hasher_2.11"            % "1.2.0",
     "org.scalatest"        %% "scalatest"              % "3.0.1" % "test"
   )
 }

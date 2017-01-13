@@ -16,9 +16,7 @@ import com.roundeights.hasher.Implicits._
 import spray.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Client(publicApiKey: String, privateApiKey: String) {
-  implicit val system = ActorSystem()
-  implicit val materializer = ActorMaterializer()
+class Client(publicApiKey: String, privateApiKey: String)(implicit system: ActorSystem, materializer: ActorMaterializer) {
   val HeaderApiKey = "API-Key"
   val HeaderSignature = "API-Hash"
 
@@ -39,24 +37,10 @@ class Client(publicApiKey: String, privateApiKey: String) {
 
   println(s"request: $request")
 
-  val response = Await.result(Http().singleRequest(request), 2 seconds)
+  val response = Await.result(Http().singleRequest(request), 5 seconds)
 
-  val result = Await.result(Unmarshal(response).to[String].map(_.parseJson), 2 seconds)
+  val result = Await.result(Unmarshal(response).to[String].map(_.parseJson), 10 seconds)
 
   println(result)
-
-  system.terminate()
-
 }
 
-case class Limits(used: Int, allowed: Int, expires: Int)
-
-case class ResponseSuccess[T](success: Boolean, limit: Limits, data: T)
-
-case class ResponseError(error: Int, errorMsg: String)
-
-case class Balance(PLN: BigDecimal, BTC: BigDecimal, LTC: BigDecimal)
-
-case class Balances(available: Balance, blocked: Balance)
-
-case class Info(balances: Balances)
