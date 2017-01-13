@@ -15,9 +15,9 @@ import com.roundeights.hasher.Implicits._
 import spray.json._
 
 class Client(publicApiKey: String, privateApiKey: String)(implicit system: ActorSystem, materializer: ActorMaterializer) {
-  val HeaderApiKey = "API-Key"
-  val HeaderSignature = "API-Hash"
-  val BaseUrl = "https://www.bitmarket.pl/api2/"
+  private val HeaderApiKey = "API-Key"
+  private val HeaderSignature = "API-Hash"
+  private val BaseUrl = "https://www.bitmarket.pl/api2/"
 
   private def requestBody(method: String): String = {
     Uri()
