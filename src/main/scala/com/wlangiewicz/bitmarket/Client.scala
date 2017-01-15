@@ -53,24 +53,29 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
   }
 
   /**
-    * Generates a HttpRequest that can be later performed to get swapList response
-    * @see https://github.com/bitmarket-net/api#swaplist---list-swap-contracts
-    * @return HttpRequest performing swapList request
-    */
+   * Generates a HttpRequest that can be later performed to get swapList response
+   * @see https://github.com/bitmarket-net/api#swaplist---list-swap-contracts
+   * @return HttpRequest performing swapList request
+   */
   def swapListRequest: HttpRequest = {
     httpRequest(requestBody(method = "swapList", Map("currency" -> "BTC")))
   }
 
-    /**
-    * Generates a HttpRequest that can be later performed to create swap contract using swapOpen request
-    * @see https://github.com/bitmarket-net/api#swapopen---open-swap-contract
-    * @return HttpRequest performing Info request
-    */
+  /**
+   * Generates a HttpRequest that can be later performed to create swap contract using swapOpen request
+   * @see https://github.com/bitmarket-net/api#swapopen---open-swap-contract
+   * @return HttpRequest performing swapOpen request
+   */
   def swapOpenRequest(amount: BigDecimal, rate: BigDecimal): HttpRequest = {
     httpRequest(requestBody(method = "swapOpen", Map("currency" -> "BTC", "amount" -> amount.toString, "rate" -> rate.toString)))
   }
 
-    def swapCloseRequest(id: Long): HttpRequest = {
+  /**
+   * Generates a HttpRequest that can be later performed to close swap contract using swapClose request
+   * @see https://github.com/bitmarket-net/api#swapclose---close-swap-contract
+   * @return HttpRequest performing swapClose request
+   */
+  def swapCloseRequest(id: Long): HttpRequest = {
     httpRequest(requestBody(method = "swapClose", Map("currency" -> "BTC", "id" -> id.toString)))
   }
 
@@ -104,25 +109,31 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
   }
 
   /**
-    * Lists my open swap contracts
-    * @param executionContext Required by underlying API
-    * @return
-    */
+   * Lists my open swap contracts
+   * @param executionContext Required by underlying API
+   * @return
+   */
   def swapList(implicit executionContext: ExecutionContext): Future[ResponseSuccess[SwapList]] = {
     performRequest(swapListRequest).flatMap(unmarshalResponse[SwapList])
   }
 
   /**
-    * Opens single swap contract with given parameters, hardcoded BTC as swap currency
-    * @param executionContext Required by underlying API
-    * @param amount BigDecimal BTC amount
-    * @param rate BigDecimal rate in percents per year
-    * @return
-    */
+   * Opens single swap contract with given parameters, hardcoded BTC as swap currency
+   * @param executionContext Required by underlying API
+   * @param amount BigDecimal BTC amount
+   * @param rate BigDecimal rate in percents per year
+   * @return
+   */
   def swapOpen(amount: BigDecimal, rate: BigDecimal)(implicit executionContext: ExecutionContext): Future[ResponseSuccess[SwapOpened]] = {
     performRequest(swapOpenRequest(amount, rate)).flatMap(unmarshalResponse[SwapOpened])
   }
 
+  /**
+   * Closes single swap contract by Id, hardcoded BTC as swap currency
+   * @param executionContext Required by underlying API
+   * @param id Long id of the swap contract to close
+   * @return SwapClosed response indicating balances on the account
+   */
   def swapClose(id: Long)(implicit executionContext: ExecutionContext): Future[ResponseSuccess[SwapClosed]] = {
     performRequest(swapCloseRequest(id)).flatMap(unmarshalResponse[SwapClosed])
   }
