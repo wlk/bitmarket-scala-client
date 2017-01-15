@@ -14,7 +14,7 @@ import collection.immutable.Seq
 import com.roundeights.hasher.Implicits._
 import spray.json._
 
-class Client(publicApiKey: String, privateApiKey: String)(implicit system: ActorSystem, materializer: ActorMaterializer) {
+class Client(publicApiKey: String, privateApiKey: String)(implicit system: ActorSystem, materializer: ActorMaterializer) extends JsonFormats {
   private val HeaderApiKey = "API-Key"
   private val HeaderSignature = "API-Hash"
   private val BaseUrl = "https://www.bitmarket.pl/api2/"
@@ -55,7 +55,7 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
 
   /**
    * Performs a single HttpRequest
-   * @param request
+   * @param request HttpRequest to perform
    * @return Future[HttpResponse]
    */
   def performRequest(request: HttpRequest): Future[HttpResponse] = {
@@ -66,10 +66,20 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
    * Parses HttpResponse into objects
    * @param httpResponse A HttpResponse that contains response from the Bitmarket API
    * @param executionContext Required by underlying API
+   * @param reader Required JSON unmarshaller (reader)
    * @return Unmarshaled response as JsValue
    */
-  def unmarshalResponse(httpResponse: HttpResponse)(implicit executionContext: ExecutionContext): Future[JsValue] = {
-    Unmarshal(httpResponse).to[String].map(_.parseJson)
+  def unmarshalResponse[T](httpResponse: HttpResponse)(implicit executionContext: ExecutionContext, reader: JsonReader[ResponseSuccess[T]]): Future[ResponseSuccess[T]] = {
+    Unmarshal(httpResponse).to[String].map(_.parseJson.convertTo[ResponseSuccess[T]])
+  }
+
+  /**
+   * This is suggested way to get Info object
+   * @param executionContext Required by underlying API
+   * @return
+   */
+  def info(implicit executionContext: ExecutionContext): Future[ResponseSuccess[Info]] = {
+    performRequest(infoRequest).flatMap(unmarshalResponse[Info])
   }
 }
 
