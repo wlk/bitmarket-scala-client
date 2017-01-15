@@ -19,21 +19,23 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
   private val HeaderSignature = "API-Hash"
   private val BaseUrl = "https://www.bitmarket.pl/api2/"
 
-  private def requestBody(method: String): String = {
+  private def requestBody(method: String, parameters: Map[String, String] = Map.empty): String = {
     Uri()
       .withQuery(
         Uri.Query.apply(
           Map(
             "method" -> method,
             "tonce" -> (System.currentTimeMillis / 1000).toString
-          )
+          ) ++ parameters
         )
       )
       .rawQueryString
       .getOrElse("")
   }
 
-  private def httpRequest(signedBody: String, body: String) = {
+  private def httpRequest(body: String) = {
+    val signedBody = body.hmac(privateApiKey).sha512.hex
+
     HttpRequest(
       uri = BaseUrl, method = HttpMethods.POST,
       headers = Seq(RawHeader(HeaderApiKey, publicApiKey), RawHeader(HeaderSignature, signedBody)),
@@ -47,10 +49,16 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
    * @return HttpRequest performing Info request
    */
   def infoRequest: HttpRequest = {
-    val body = requestBody(method = "info")
-    val signedBody = body.hmac(privateApiKey).sha512.hex
+    httpRequest(requestBody(method = "info"))
+  }
 
-    httpRequest(signedBody, body)
+  /**
+    * Generates a HttpRequest that can be later performed to get Info response
+    * @see https://github.com/bitmarket-net/api#info---account-information
+    * @return HttpRequest performing Info request
+    */
+  def swapListRequest: HttpRequest = {
+    httpRequest(requestBody(method = "swapList", Map("currency" -> "BTC")))
   }
 
   /**
@@ -80,6 +88,15 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
    */
   def info(implicit executionContext: ExecutionContext): Future[ResponseSuccess[Info]] = {
     performRequest(infoRequest).flatMap(unmarshalResponse[Info])
+  }
+
+  /**
+    * Lists my open swap contracts
+    * @param executionContext Required by underlying API
+    * @return
+    */
+  def swapList(implicit executionContext: ExecutionContext): Future[ResponseSuccess[SwapList]] = {
+    performRequest(swapListRequest).flatMap(unmarshalResponse[SwapList])
   }
 }
 
