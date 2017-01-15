@@ -11,6 +11,10 @@ package object bitmarket {
 
   type SwapList = Vector[SwapContract]
 
+  case class SwapOpened(id: Long, balances: Balances)
+
+  case class SwapClosed(balances: Balances)
+
   // LOWER LEVEL API OBJECTS
   case class Limits(used: Int, allowed: Int, expires: Int)
 

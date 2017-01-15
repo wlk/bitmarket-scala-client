@@ -17,5 +17,9 @@ trait JsonFormats extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val SwapContractFormat = jsonFormat4(SwapContract)
 
+  implicit val SwapOpenedFormat = jsonFormat2(SwapOpened)
+
+  implicit val SwapClosedFormat = jsonFormat1(SwapClosed)
+
   implicit def ResponseSuccessFormat[T: JsonFormat] = jsonFormat3(ResponseSuccess.apply[T])
 }
