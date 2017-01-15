@@ -18,6 +18,7 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
   private val HeaderApiKey = "API-Key"
   private val HeaderSignature = "API-Hash"
   private val BaseUrl = "https://www.bitmarket.pl/api2/"
+  private val SwapUrl = "http://bitmarket.pl/json/swapBTC/swap.json"
 
   private def requestBody(method: String, parameters: Map[String, String] = Map.empty): String = {
     Uri()
@@ -80,6 +81,14 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
   }
 
   /**
+   * Generates a HttpRequest that can be performed to get all swap orders on the market
+   * @return
+   */
+  def swapsRequest: HttpRequest = {
+    HttpRequest(uri = SwapUrl, method = HttpMethods.GET)
+  }
+
+  /**
    * Performs a single HttpRequest
    * @param request HttpRequest to perform
    * @return Future[HttpResponse]
@@ -97,6 +106,18 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
    */
   def unmarshalResponse[T](httpResponse: HttpResponse)(implicit executionContext: ExecutionContext, reader: JsonReader[ResponseSuccess[T]]): Future[ResponseSuccess[T]] = {
     Unmarshal(httpResponse).to[String].map(_.parseJson.convertTo[ResponseSuccess[T]])
+  }
+
+  /**
+   * Different unmarshaller used to unmarshall respnses that do not return "success" indicator
+   * @param httpResponse
+   * @param executionContext
+   * @param reader
+   * @tparam T
+   * @return
+   */
+  def unmarshalPublicResponse[T](httpResponse: HttpResponse)(implicit executionContext: ExecutionContext, reader: JsonReader[T]): Future[T] = {
+    Unmarshal(httpResponse).to[String].map(_.parseJson.convertTo[T])
   }
 
   /**
@@ -136,6 +157,15 @@ class Client(publicApiKey: String, privateApiKey: String)(implicit system: Actor
    */
   def swapClose(id: Long)(implicit executionContext: ExecutionContext): Future[ResponseSuccess[SwapClosed]] = {
     performRequest(swapCloseRequest(id)).flatMap(unmarshalResponse[SwapClosed])
+  }
+
+  /**
+   * Returns complete view of the swap market
+   * @param executionContext Required by underlying API
+   * @return SwapsResponse response showing all open swap contracts on the market
+   */
+  def swaps(implicit executionContext: ExecutionContext): Future[SwapsResponse] = {
+    performRequest(swapsRequest).flatMap(unmarshalPublicResponse[SwapsResponse])
   }
 }
 

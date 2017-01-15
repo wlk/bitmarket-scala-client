@@ -15,6 +15,8 @@ package object bitmarket {
 
   case class SwapClosed(balances: Balances)
 
+  case class SwapsResponse(demand: BigDecimal, cutoff: BigDecimal, swaps: Vector[SwapOrder])
+
   // LOWER LEVEL API OBJECTS
   case class Limits(used: Int, allowed: Int, expires: Int)
 
@@ -23,4 +25,6 @@ package object bitmarket {
   case class Balances(available: Balance, blocked: Balance)
 
   case class SwapContract(id: Long, amount: BigDecimal, rate: BigDecimal, earnings: BigDecimal)
+
+  case class SwapOrder(percent: BigDecimal, amount: BigDecimal)
 }
